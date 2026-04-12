@@ -9,5 +9,5 @@
   "homepage": "https://github.com/fivetaku/insane-search",
   "repository": "https://github.com/fivetaku/insane-search",
   "license": "MIT",
-  "keywords": ["web-access", "search", "webfetch", "bypass", "jina", "yt-dlp", "twitter", "reddit", "youtube", "naver"]
+  "keywords": ["web-access", "search", "webfetch", "bypass", "jina", "yt-dlp", "twitter", "reddit", "youtube", "naver", "bluesky", "github", "arxiv", "medium", "hacker-news", "mastodon", "threads", "stackoverflow", "dcinside", "fmkorea"]
 }

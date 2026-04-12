@@ -1,11 +1,15 @@
 ---
 name: insane-search
 description: >
-  WebFetch가 차단되거나 실패할 때, 또는 X/Twitter, Reddit, YouTube, GitHub 등
+  WebFetch가 차단되거나 실패할 때, 또는 X/Twitter, Reddit, YouTube, GitHub,
+  Mastodon, Medium, Substack, Stack Overflow, Threads, 네이버 등
   플랫폼에 접근할 때 사용하는 우회 접근 전략. 1,858개 미디어 사이트(yt-dlp),
   범용 웹(Jina Reader), 공개 API(HN, Bluesky, arXiv 등)를 활용한다.
   트위터/X 못 열어, 레딧 안 읽혀, 유튜브 자막 뽑아줘, 깃헙 검색, 사이트 차단됨,
-  twitter access, reddit blocked, youtube subtitles, github search, arxiv papers.
+  스레드 안 열려, 마스토돈, 미디엄, 서브스택, 스택오버플로우, 네이버 블로그,
+  디시인사이드, 에펨코리아, 요즘IT, 긱뉴스, 클리앙,
+  twitter access, reddit blocked, youtube subtitles, github search, arxiv papers,
+  threads, mastodon, medium, substack, stackoverflow, naver blog, dcinside, fmkorea.
   Make sure to use this skill whenever WebFetch returns 402/403/blocked,
   when accessing social media or developer platforms,
   or when extracting media content (video, audio, subtitles).
@@ -45,7 +49,8 @@ description: >
 
 | 사이트 | 도메인 | 방법 | 상세 |
 |--------|--------|------|------|
-| GitHub | github.com | gh CLI / REST API | [json-api.md](references/json-api.md) |
+| GitHub | github.com | gh CLI / REST API | [public-api.md](references/public-api.md) |
+| V2EX | v2ex.com | JSON API | [json-api.md](references/json-api.md) |
 | Stack Overflow | stackoverflow.com | SE API v2.3 (WebFetch 도메인 차단) | [public-api.md](references/public-api.md) |
 | Hacker News | news.ycombinator.com | Firebase JSON API | [json-api.md](references/json-api.md) |
 | Lobste.rs | lobste.rs | JSON API | [json-api.md](references/json-api.md) |
@@ -78,8 +83,14 @@ description: >
 | 벨로그 | velog.io | RSS (`v2.velog.io/rss/@{user}`) | [json-api.md](references/json-api.md) |
 | 브런치 | brunch.co.kr | Jina Reader + RSS | [jina.md](references/jina.md) |
 | 한국경제 | hankyung.com | Jina Reader + RSS | [jina.md](references/jina.md) |
-| SBS/JTBC/Kakao | 방송사 | yt-dlp | [media.md](references/media.md) |
-| Chzzk/Soop | 스트리밍 | yt-dlp | [media.md](references/media.md) |
+| 44bits | 44bits.io | Jina Reader | [jina.md](references/jina.md) |
+| 커리어리 | careerly.co.kr | Jina Reader | [jina.md](references/jina.md) |
+| 요즘IT | yozm.wishket.com | curl 직접 (Jina 차단) | [fallback.md](references/fallback.md) |
+| 디시인사이드 | dcinside.com | 모바일 curl (Jina 빈 본문) | [fallback.md](references/fallback.md) |
+| 에펨코리아 | fmkorea.com | 모바일 curl (Jina 430 차단) | [fallback.md](references/fallback.md) |
+| 티스토리 | *.tistory.com | WebFetch / RSS | [json-api.md](references/json-api.md) |
+| SBS/JTBC/Kakao | sbs.co.kr, jtbc.co.kr | yt-dlp | [media.md](references/media.md) |
+| Chzzk/Soop | chzzk.naver.com, sooplive.co.kr | yt-dlp | [media.md](references/media.md) |
 
 ### 뉴스/미디어
 
@@ -89,16 +100,11 @@ description: >
 | Substack | *.substack.com | Jina Reader + RSS | [jina.md](references/jina.md) |
 | 다음 뉴스 | news.daum.net | Jina Reader | [jina.md](references/jina.md) |
 
-### 접근 불가
+### RSS 피드
 
-| 사이트 | 이유 |
-|--------|------|
-| Quora | Cloudflare Bot Fight Mode |
-| Facebook | JS SPA + 로그인 |
-| 쿠팡 | F5 BIG-IP WAF |
-| 네이버/다음 카페 | 로그인 + iframe |
-| 요즘IT | CloudFront 403 |
-| LinkedIn (프로필) | 로그인 벽 (WebSearch→WebFetch 조합은 가능) |
+| 사이트 | 도메인 | 방법 | 상세 |
+|--------|--------|------|------|
+| RSS/Atom 범용 | 다양 | feedparser | [json-api.md](references/json-api.md) |
 
 ## 접근 순서
 
