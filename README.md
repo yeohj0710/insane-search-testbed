@@ -103,6 +103,10 @@ insane-search is a **reader for public content**, not a way around authenticatio
 - Never logs in as you and never stores or transmits credentials.
 - All routes use no-auth public endpoints and standard, documented techniques.
 
+## License
+
+MIT
+
 ---
 
 <div align="center">
