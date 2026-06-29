@@ -26,3 +26,8 @@ evals/
 .env
 .env.local
 .omc/
+.venv/
+
+# Local testbed artifacts
+test-artifacts/
+node_modules/

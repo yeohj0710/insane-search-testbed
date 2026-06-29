@@ -98,14 +98,15 @@ def _line_is_exempt(line: str, ext: str) -> bool:
 def _scan_file(path: Path, root: Path) -> list[str]:
     """Return list of violation strings for this file."""
     rel = path.relative_to(root.parent)
-    if str(rel) in EXPLICIT_ALLOW_FILES:
+    rel_s = rel.as_posix()
+    if rel_s in EXPLICIT_ALLOW_FILES:
         return []
 
     ext = path.suffix.lower()
     try:
         text = path.read_text(encoding="utf-8", errors="ignore")
     except Exception as e:
-        return [f"{rel}:0 — read error: {e}"]
+        return [f"{rel_s}:0 — read error: {e}"]
 
     violations: list[str] = []
     for lineno, line in enumerate(text.splitlines(), start=1):
@@ -119,7 +120,7 @@ def _scan_file(path: Path, root: Path) -> list[str]:
                 hit_brand = brand
                 break
         if hit_brand:
-            violations.append(f"{rel}:{lineno} — brand `{hit_brand}` in: {line.strip()[:120]}")
+            violations.append(f"{rel_s}:{lineno} — brand `{hit_brand}` in: {line.strip()[:120]}")
             continue  # one violation per line
         # 2) URL/domain regex scan — catches hosts that aren't in the denylist.
         for match in URL_PATTERN.finditer(line):
@@ -129,7 +130,7 @@ def _scan_file(path: Path, root: Path) -> list[str]:
                 continue
             if host.endswith(".example.com") or host.endswith(".example.org"):
                 continue
-            violations.append(f"{rel}:{lineno} — hardcoded host `{host}` in: {line.strip()[:120]}")
+            violations.append(f"{rel_s}:{lineno} — hardcoded host `{host}` in: {line.strip()[:120]}")
             break
     return violations
 
