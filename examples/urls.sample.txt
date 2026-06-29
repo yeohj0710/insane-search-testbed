@@ -1,0 +1,7 @@
+# Public web research sample URLs.
+# Empty lines and lines starting with # are ignored.
+
+https://youtu.be/vjSZIyYd0NI?si=4HCubGogjOOxnfBc
+https://news.ycombinator.com/
+https://hn.algolia.com/api/v1/search?query=claude&tags=story&hitsPerPage=3
+http://export.arxiv.org/api/query?search_query=all:large+language+model&max_results=3

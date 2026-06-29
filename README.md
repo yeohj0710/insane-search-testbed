@@ -1,59 +1,72 @@
 # insane-search-testbed
 
-막힌 공개 웹페이지를 AI 에이전트가 읽을 수 있는지 테스트해보는 레포입니다.
+공개 웹페이지를 많이 읽어야 할 때 쓰는 AI 리서치 테스트베드입니다.
 
-원본은 [`fivetaku/insane-search`](https://github.com/fivetaku/insane-search)입니다.  
-이 레포는 그 도구를 **Codex에서 바로 돌려보고 검증할 수 있게 만든 테스트베드**입니다.
+원본은 [`fivetaku/insane-search`](https://github.com/fivetaku/insane-search)입니다.
+이 레포는 그 엔진을 Codex에서 바로 설치하고, 여러 URL에 돌려보고, 어떤 공개 경로가 먹히는지 확인하기 쉽게 만든 작업대입니다.
+
+## 이 레포의 타겟
+
+한두 개 로그인 페이지를 대신 눌러주는 도구가 아닙니다.
+
+이 레포의 타겟은 이쪽입니다.
+
+- 공개 웹페이지를 많이 모아야 할 때
+- 여러 사이트를 한 번에 조사해야 할 때
+- 일반 fetch가 막히는 공개 페이지를 다시 시도해야 할 때
+- YouTube, Naver, X, Reddit, HN, arXiv 같은 공개 출처를 리서치해야 할 때
+- AI 에이전트가 “이 페이지 못 읽어요” 하고 멈추는 일을 줄이고 싶을 때
+
+핵심은 **많이**입니다.
+
+공개 URL을 여러 개 넣고, 가능한 공개 경로를 계속 시도해서, 읽을 수 있는 건 읽고 못 읽는 건 왜 못 읽는지 남기는 것이 목적입니다.
 
 ## 한 줄로 말하면
 
-일반 웹 요청으로는 막히는 공개 페이지를 `API`, `RSS`, `yt-dlp`, `curl_cffi`, `Playwright` 같은 여러 방법으로 다시 시도해 읽어오는 도구입니다.
+공개 웹페이지 대량 리서치를 위해 `API`, `RSS`, `yt-dlp`, `curl_cffi`, `Playwright` 같은 여러 접근 방법을 자동으로 시도하는 테스트베드입니다.
 
-여기서 중요한 말은 **공개 페이지**입니다.
+여기서 중요한 말은 **공개**입니다.
 
-로그인해야 볼 수 있는 글, 유료 글, 비공개 계정, DM, 관리자 페이지를 몰래 읽는 도구가 아닙니다.  
-브라우저에서 누구나 볼 수 있거나, 공개 API나 공개 feed로 열려 있는 데이터만 다룹니다.
+로그인해야만 보이는 글, 유료 글, 비공개 계정, DM, 주문내역, 관리자 화면을 우회해서 읽는 도구가 아닙니다.
 
-## 왜 필요한가요?
+## 왜 쓰나요?
 
-AI 에이전트에게 URL을 주면 이런 일이 자주 생깁니다.
+AI 에이전트로 리서치를 하다 보면 이런 일이 자주 생깁니다.
 
-- `403 Forbidden`이 뜹니다.
-- 페이지는 열리는데 내용이 비어 있습니다.
-- JavaScript로 렌더링되는 사이트라 HTML만 가져오면 쓸 내용이 없습니다.
-- YouTube 영상인데 자막이나 설명을 못 가져옵니다.
-- X, Reddit 같은 사이트가 비로그인 요청을 막습니다.
+- URL을 줬는데 `403 Forbidden`이 뜹니다.
+- 페이지는 열리지만 본문이 비어 있습니다.
+- YouTube 영상인데 설명이나 자막 정보를 못 가져옵니다.
+- X나 Reddit은 비로그인 요청을 자주 막습니다.
+- Naver 같은 사이트는 그냥 HTTP 요청과 브라우저 요청 결과가 다를 수 있습니다.
+- 사이트마다 크롤링 코드를 새로 짜기 귀찮습니다.
 
-보통은 여기서 끝납니다.
+insane-search는 여기서 바로 포기하지 않습니다.
 
-insane-search는 바로 포기하지 않습니다.  
-다른 공개 경로를 계속 시도합니다.
+먼저 공개 API나 공개 feed를 찾습니다.
+그다음 일반 HTML 요청을 해봅니다.
+그래도 안 되면 브라우저처럼 보이는 요청을 해봅니다.
+필요하면 Playwright로 실제 브라우저 렌더링까지 시도합니다.
 
-예를 들면:
+## 차별점
 
-- YouTube는 `yt-dlp`로 메타데이터와 자막 정보를 가져옵니다.
-- Reddit은 `.rss` 같은 공개 feed를 먼저 봅니다.
-- X는 oEmbed나 개별 tweet 공개 endpoint를 봅니다.
-- Hacker News나 arXiv는 공개 API를 씁니다.
-- 일반 사이트는 브라우저처럼 보이는 TLS 요청을 시도합니다.
-- 그래도 안 되면 Playwright로 실제 브라우저 렌더링을 시도합니다.
+일반 `WebFetch`는 보통 한 번 요청하고 끝납니다.
 
-## 이 레포는 원본과 뭐가 다른가요?
+이 레포는 여러 공개 경로를 순서대로 시도합니다.
 
-원본 `insane-search`는 Claude Code 플러그인입니다.
+| 상황 | 보통 fetch | insane-search |
+|---|---|---|
+| YouTube 영상 | HTML만 보거나 실패 | `yt-dlp`로 공개 메타데이터 확인 |
+| X 개별 글 | 로그인/차단 가능성 큼 | oEmbed, tweet-result 같은 공개 경로 확인 |
+| Reddit | 403/429 가능성 큼 | RSS 등 공개 feed 먼저 확인 |
+| HN/arXiv | 직접 HTML 긁기 | 공개 API 사용 |
+| 일반 WAF 페이지 | 실패하면 끝 | TLS fingerprint, 모바일 URL, Playwright fallback 시도 |
+| 실패 분석 | 왜 실패했는지 모호함 | `trace`로 어떤 route가 막혔는지 남김 |
 
-이 레포는 Codex에서 실험하기 쉽게 아래를 추가했습니다.
+차별점은 이겁니다.
 
-- Windows용 bootstrap 스크립트
-- 테스트 실행 스크립트
-- Python 의존성 목록
-- Playwright 템플릿 의존성 설치
-- 실제 사이트별 live route 테스트
-- Windows에서 `bias_check.py`가 Phase 0 예외를 못 잡던 경로 버그 수정
+> 공개로 열려 있는 다른 길을 많이 찾아본다.
 
-즉, 이 레포는 “Codex에서 insane-search 엔진이 실제로 어디까지 되는지 확인하는 작업대”입니다.
-
-## 설치하기
+## 설치
 
 PowerShell에서 실행합니다.
 
@@ -63,55 +76,89 @@ cd insane-search-testbed
 .\scripts\bootstrap.ps1
 ```
 
-`bootstrap.ps1`이 하는 일:
+설치되는 것:
 
-- `.venv` 생성
-- Python 패키지 설치
-  - `curl_cffi`
-  - `beautifulsoup4`
-  - `PyYAML`
-  - `yt-dlp`
-- Playwright 템플릿용 npm 패키지 설치
+- Python venv
+- `curl_cffi`
+- `beautifulsoup4`
+- `PyYAML`
+- `yt-dlp`
+- Playwright 템플릿용 npm 패키지
 
-## 전체 테스트 돌리기
+## 전체 테스트
 
 ```powershell
 .\scripts\run-tests.ps1
 ```
 
-성공하면 마지막에 summary/log 파일 위치가 나옵니다.
+이 테스트는 엔진이 정상인지 확인합니다.
 
-예:
+테스트에 포함된 것:
 
-```text
-summary: C:\dev\insane-search-testbed\test-artifacts\summary-...
-log: C:\dev\insane-search-testbed\test-artifacts\test-run-...
-```
+- 내부 regression 테스트
+- 안전 테스트
+- YouTube 공개 메타데이터 테스트
+- Naver 검색 HTML 테스트
+- Hacker News 공개 API 테스트
+- arXiv 공개 API 테스트
+- Playwright 템플릿 테스트
 
-## URL 하나 직접 긁어보기
+결과는 `test-artifacts` 폴더에 저장됩니다.
 
-엔진은 `skills\insane-search` 폴더에서 실행합니다.
+## URL 하나만 읽어보기
 
 ```powershell
 cd skills\insane-search
-..\..\.venv\Scripts\python.exe -m engine "https://example.com/" --selector h1 --json
+..\..\.venv\Scripts\python.exe -m engine "https://example.com/" --json
 ```
 
-YouTube 영상도 이렇게 볼 수 있습니다.
+YouTube 예시:
 
 ```powershell
 ..\..\.venv\Scripts\python.exe -m engine "https://youtu.be/vjSZIyYd0NI?si=4HCubGogjOOxnfBc" --json
 ```
 
-Naver 검색도 이렇게 테스트할 수 있습니다.
+Naver 검색 예시:
 
 ```powershell
 ..\..\.venv\Scripts\python.exe -m engine "https://search.naver.com/search.naver?query=claude+code" --json
 ```
 
-## 결과는 어떻게 읽나요?
+## URL 여러 개 한 번에 돌리기
 
-`--json`을 붙이면 이런 값이 나옵니다.
+대량 리서치가 이 레포의 핵심입니다.
+
+먼저 URL 목록을 만듭니다.
+
+```text
+# examples/urls.sample.txt
+https://youtu.be/vjSZIyYd0NI?si=4HCubGogjOOxnfBc
+https://news.ycombinator.com/
+https://hn.algolia.com/api/v1/search?query=claude&tags=story&hitsPerPage=3
+http://export.arxiv.org/api/query?search_query=all:large+language+model&max_results=3
+```
+
+실행합니다.
+
+```powershell
+.\scripts\run-url-list.ps1 -UrlsFile .\examples\urls.sample.txt
+```
+
+결과는 `test-artifacts\research-run-날짜` 폴더에 저장됩니다.
+
+각 URL마다 아래 파일이 생깁니다.
+
+- `001.stdout.json`
+- `001.stderr.txt`
+- `002.stdout.json`
+- `002.stderr.txt`
+- `summary.json`
+
+성공한 URL과 실패한 URL을 나눠서 볼 수 있습니다.
+
+## 결과 읽는 법
+
+`--json` 결과에서 이 값만 보면 됩니다.
 
 ```json
 {
@@ -123,126 +170,154 @@ Naver 검색도 이렇게 테스트할 수 있습니다.
 }
 ```
 
-쉽게 보면 됩니다.
+- `ok: true`: 읽기 성공
+- `verdict: strong_ok`: 꽤 확실한 성공
+- `verdict: weak_ok`: 읽긴 했지만 검증은 약함
+- `profile_used`: 어떤 방식이 먹혔는지
+- `summary`: 성공/실패 요약
+- `trace`: 어떤 시도를 했는지
+- `content_length`: 가져온 내용 크기
 
-- `ok: true`면 읽기 성공입니다.
-- `verdict: strong_ok`면 꽤 확실하게 성공입니다.
-- `verdict: weak_ok`면 읽긴 했지만 검증 강도는 조금 약합니다.
-- `profile_used`는 어떤 방식으로 성공했는지 보여줍니다.
-- `trace`는 어떤 시도를 했고 어디서 막혔는지 보여줍니다.
-- `content_length`는 가져온 내용 크기입니다.
+대량 리서치에서는 `ok`, `profile_used`, `summary`를 먼저 보면 됩니다.
 
-## 실제로 어떤 사이트가 어떻게 됐나요?
+## 실제로 어디까지 됐나요?
 
-이 레포에서 실제로 돌려본 결과입니다.
+이 레포에서 돌려본 결과입니다.
 
-| 사이트 | 결과 | 어떻게 접근했나 |
+| 사이트 | 결과 | 접근 방식 |
 |---|---|---|
 | YouTube | 성공 | `yt-dlp`로 공개 메타데이터 수집 |
-| Naver 검색 | 성공 | `curl_cffi`로 검색 HTML 수집 |
-| Hacker News | 성공 | Firebase API, Algolia API 사용 |
-| arXiv | 성공 | Atom API 사용 |
-| X 개별 글 | 성공 | tweet-result, oEmbed 공개 endpoint 사용 |
-| X timeline | 실패/제한 | 429 rate limit 발생 |
-| Reddit | 불안정 | RSS는 성공할 때도 있지만 429/403 발생 가능 |
-| LinkedIn | 실패 | 테스트 URL이 404였고 로그인 우회는 하지 않음 |
-| example.com | 성공 | 기본 연결 확인용 |
+| Naver 검색 | 제한적 | HTML 200은 받을 수 있지만 engine 검증에서 challenge로 볼 수 있음 |
+| Hacker News | 성공 | Firebase API, Algolia API |
+| arXiv | 성공 | Atom API |
+| X 개별 글 | 성공 | tweet-result, oEmbed 공개 endpoint |
+| X timeline | 제한적 | 429 rate limit 발생 |
+| Reddit | 불안정 | RSS는 성공할 때도 있지만 429/403 가능 |
+| LinkedIn | 실패 | 테스트 URL이 404, 로그인 우회 없음 |
+| example.com | 성공 | 기본 연결 확인 |
 
-여기서 “뚫린다”는 말은 해킹한다는 뜻이 아닙니다.
+여기서 “성공”은 이런 뜻입니다.
 
-정확히는 이 뜻입니다.
+> 사이트가 공개로 열어둔 경로를 통해 데이터를 읽었다.
 
-> 사이트가 공개로 열어둔 다른 길을 찾아서 읽는다.
+해킹이나 로그인 우회가 아닙니다.
 
-예를 들어 YouTube 페이지 HTML을 직접 읽기 어렵더라도 `yt-dlp`가 공개 메타데이터를 가져올 수 있습니다.  
-X timeline은 막혀도 개별 tweet의 oEmbed는 열려 있을 수 있습니다.  
-Hacker News는 HTML을 긁지 않아도 공식 공개 API가 있습니다.
+## 예시로 보면 더 쉽습니다
 
-## 일반 WebFetch와 뭐가 다른가요?
+### YouTube
 
-일반 WebFetch는 보통 한 번 요청하고 끝납니다.
+브라우저 HTML을 직접 긁는 대신 `yt-dlp`를 먼저 씁니다.
 
-insane-search는 다르게 움직입니다.
+얻을 수 있는 것:
 
-1. 먼저 플랫폼별 공개 경로를 봅니다.
-2. 안 되면 일반 HTML 요청을 봅니다.
-3. 안 되면 브라우저처럼 보이는 TLS 요청을 씁니다.
-4. 안 되면 모바일 URL, RSS, JSON endpoint 같은 변형을 봅니다.
-5. 그래도 안 되면 Playwright 브라우저 렌더링을 시도합니다.
-6. 로그인/paywall이면 멈춥니다.
+- 제목
+- 설명
+- 채널 정보
+- 공개 자막 후보
+- 공개 메타데이터
 
-그래서 장점은 이것입니다.
+대량으로 영상 URL을 넣으면 영상 리서치에 쓸 수 있습니다.
 
-- 한 번 막혔다고 바로 포기하지 않습니다.
-- 사이트별 공개 route를 자동으로 먼저 봅니다.
-- YouTube 같은 미디어 사이트는 `yt-dlp`를 씁니다.
-- 결과가 진짜 내용인지 검증합니다.
-- 실패해도 어디서 막혔는지 trace가 남습니다.
+### Naver 검색
 
-## 무엇에 쓸 수 있나요?
+일반 요청이 막히거나 빈약할 수 있어서 `curl_cffi`로 브라우저에 가까운 요청을 시도합니다.
 
-이런 용도에 잘 맞습니다.
+얻을 수 있는 것:
 
-- YouTube 영상 설명, 제목, 자막 후보 가져오기
-- Naver 검색 결과 HTML 수집 테스트
-- 공개 게시글 요약
-- 공개 API가 있는 사이트의 데이터 수집
-- AI 에이전트 리서치 자동화
-- “이 URL을 AI가 읽을 수 있나?” 사전 테스트
-- 사이트별 차단 지점 확인
+- 검색 HTML
+- 공개 검색 결과 구조
+- 검색 페이지에서 보이는 공개 텍스트
+
+주의할 점:
+
+- HTML은 200으로 받아도 내부에 `captcha` 같은 문자열이 있으면 engine이 실패로 볼 수 있습니다.
+- 즉, Naver는 “항상 성공”이 아니라 “공개 HTML을 받을 수는 있지만 검증이 까다로운 쪽”입니다.
+
+스마트스토어 판매자센터처럼 로그인 필요한 화면은 대상이 아닙니다.
+
+### X
+
+timeline 전체는 rate limit에 걸릴 수 있습니다.
+
+하지만 개별 글은 공개 endpoint가 열려 있으면 읽을 수 있습니다.
+
+얻을 수 있는 것:
+
+- 공개 tweet 텍스트
+- oEmbed HTML
+- 일부 공개 메타데이터
+
+로그인 전용 피드, DM, 비공개 계정은 대상이 아닙니다.
+
+### Reddit
+
+RSS가 열려 있으면 읽을 수 있습니다.
+
+하지만 rate limit이 자주 발생합니다.
+
+그래서 Reddit은 “항상 된다”가 아니라 “공개 feed가 살아 있으면 된다”에 가깝습니다.
+
+## 잘 맞는 사용처
+
+이런 작업에 잘 맞습니다.
+
+- 공개 웹페이지 수십 개를 한 번에 조사
+- 여러 출처에서 공개 텍스트 수집
+- YouTube 영상 목록 메타데이터 수집
+- 공개 검색 결과 리서치
+- 공개 API/RSS가 있는 사이트 조사
+- AI 에이전트가 읽을 수 있는 URL인지 사전 검증
+- 사이트별 차단 원인 확인
 
 예를 들어 이런 식입니다.
 
-```powershell
-cd skills\insane-search
-..\..\.venv\Scripts\python.exe -m engine "https://youtu.be/vjSZIyYd0NI?si=4HCubGogjOOxnfBc" --json
-```
+1. 리서치할 URL을 `urls.txt`에 모읍니다.
+2. `run-url-list.ps1`로 한 번에 돌립니다.
+3. `summary.json`에서 성공/실패를 봅니다.
+4. 성공한 JSON만 AI에게 넘겨 요약합니다.
 
-이렇게 하면 YouTube 페이지를 그냥 긁는 대신, 먼저 `yt-dlp` 경로를 써서 공개 메타데이터를 가져옵니다.
+## 잘 안 맞는 사용처
 
-## 무엇에는 못 쓰나요?
+이런 작업에는 맞지 않습니다.
 
-아래 용도로 쓰면 안 됩니다.
+- 인스타 로그인 화면 읽기
+- 네이버 스마트스토어 판매자센터 읽기
+- 주문내역, 정산, 매출, 관리자 데이터 수집
+- DM, 메일, 비공개 게시글 읽기
+- paywall 우회
+- 로그인 세션으로 화면을 대신 클릭하는 업무 자동화
 
-- 로그인 필요한 글 읽기
-- 유료 콘텐츠 우회
-- 비공개 계정 보기
-- DM, 메일, 관리자 페이지 접근
-- CAPTCHA를 억지로 푸는 자동화
-- 사이트 약관을 무시한 대량 수집
+이런 작업은 `@chrome` 같은 브라우저 자동화가 더 맞습니다.
+공식 API가 있으면 공식 API가 더 안정적입니다.
 
-이 도구는 공개 데이터 접근을 돕는 도구입니다.  
-접근 권한이 없는 데이터를 가져오는 도구가 아닙니다.
+## Codex에서는 어떻게 보나요?
 
-## Codex에서 바로 플러그인처럼 쓸 수 있나요?
+원본은 Claude Code 플러그인입니다.
 
-아직은 아닙니다.
+Codex에서는 플러그인처럼 바로 붙인 게 아니라, Python engine을 직접 실행하는 방식으로 검증했습니다.
 
-원본은 Claude Code 플러그인 구조입니다.  
-Codex에서는 지금처럼 Python engine을 직접 실행하는 방식으로 테스트했습니다.
+현재 상태:
 
-즉, 현재 상태는 이렇습니다.
-
-- Claude Code: 플러그인 형태로 붙일 수 있음
-- Codex: 이 테스트베드에서 engine을 직접 실행 가능
-- Codex용 완전한 wrapper/skill: 아직 별도 작업 필요
+- Claude Code: 플러그인 형태로 사용 가능
+- Codex: 이 레포에서 engine 직접 실행 가능
+- Codex wrapper/skill: 별도 작업 필요
 
 ## 파일 구조
 
-중요한 파일만 보면 됩니다.
-
 ```text
 scripts/bootstrap.ps1          처음 설치
-scripts/run-tests.ps1          전체 테스트 실행
-requirements-test.txt          Python 테스트 의존성
+scripts/run-tests.ps1          전체 테스트
+scripts/run-url-list.ps1       URL 여러 개 대량 실행
+examples/urls.sample.txt       샘플 URL 목록
+requirements-test.txt          Python 의존성
 skills/insane-search/engine    실제 fetch 엔진
 skills/insane-search/tests     live route 테스트
-test-artifacts                 테스트 결과 로그
+test-artifacts                 테스트 결과
 ```
 
 ## 빠른 시작
 
-처음이면 이것만 실행하면 됩니다.
+처음이면 이것만 실행합니다.
 
 ```powershell
 git clone https://github.com/yeohj0710/insane-search-testbed.git
@@ -251,23 +326,31 @@ cd insane-search-testbed
 .\scripts\run-tests.ps1
 ```
 
-URL 하나만 바로 보고 싶으면:
+대량 리서치를 바로 해보려면:
 
 ```powershell
-cd skills\insane-search
-..\..\.venv\Scripts\python.exe -m engine "여기에_URL" --json
+.\scripts\run-url-list.ps1 -UrlsFile .\examples\urls.sample.txt
 ```
 
-## 요약
+내 URL 목록을 쓰려면:
 
-이 레포는 AI 에이전트가 공개 웹페이지를 어디까지 읽을 수 있는지 테스트하는 레포입니다.
+```powershell
+.\scripts\run-url-list.ps1 -UrlsFile .\my-urls.txt
+```
 
-차별점은 단순합니다.
+## 결론
 
-> 한 번 막히면 끝나는 게 아니라, 공개로 열려 있는 다른 길을 계속 찾아본다.
+이 레포는 로그인 페이지 자동화 도구가 아닙니다.
 
-YouTube, Naver, Hacker News, arXiv처럼 공개 경로가 있는 곳은 잘 됩니다.  
-X나 Reddit처럼 rate limit이 강한 곳은 일부만 됩니다.  
+이 레포는 **공개 웹 대량 리서치용 fallback 테스트베드**입니다.
+
+한 번 요청하고 막히면 끝나는 방식이 아니라, 공개로 열려 있는 다른 길을 계속 찾아봅니다.
+
+그래서 YouTube, Hacker News, arXiv처럼 공개 경로가 명확한 곳에 강합니다.
+Naver 검색처럼 HTML은 받아도 검증이 애매한 곳은 결과를 확인하면서 써야 합니다.
+X나 Reddit처럼 rate limit이 강한 곳은 일부만 됩니다.
 로그인해야 하는 곳은 안 됩니다.
 
-그래서 이 레포는 “웹을 무조건 긁는 도구”가 아니라, **공개 데이터 접근 가능성을 AI 에이전트 기준으로 검증하는 테스트베드**입니다.
+가장 잘 맞는 말은 이겁니다.
+
+> AI 에이전트가 공개 웹을 많이 읽어야 할 때, 어디까지 자동으로 읽을 수 있는지 검증하는 레포.

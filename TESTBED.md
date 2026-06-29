@@ -26,3 +26,11 @@ Runs:
 - headless Playwright template check against `example.com`
 
 Logs are written to `test-artifacts/`.
+
+## Run Many URLs
+
+```powershell
+.\scripts\run-url-list.ps1 -UrlsFile .\examples\urls.sample.txt
+```
+
+Use this for public-web research batches. Each URL gets its own stdout/stderr file plus one `summary.json` in `test-artifacts/`.
